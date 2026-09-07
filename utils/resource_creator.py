@@ -48,8 +48,82 @@ def create_subnet(
         return None
 
 
-def create_security_group():
-    pass
+def create_security_group(
+    vpc_id,
+    ingress_rules=None,
+    egress_rules=None,
+    region="ca-central-1",
+    name="default-sg",
+    description="Default security group",
+):
+    log.info(f"Creating security group: {name}")
+
+    try:
+        ec2 = boto3.client("ec2", region_name=region)
+        response = ec2.create_security_group(GroupName=name, Description=description, VpcId=vpc_id)
+        sg_id = response["GroupId"]
+
+        ec2.create_tags(Resources=[sg_id], Tags=[{"Key": "Name", "Value": name}])
+
+        if ingress_rules:
+            ec2.authorize_security_group_ingress(GroupId=sg_id, IpPermissions=ingress_rules)
+            log.info(f"Ingress rules added: {len(ingress_rules)}")
+
+        if egress_rules:
+            ec2.authorize_security_group_egress(GroupId=sg_id, IpPermissions=egress_rules)
+            log.info(f"Egress rules added: {len(egress_rules)}")
+
+        log.info(f"Security group created: {sg_id}")
+        return sg_id
+
+    except ClientError as e:
+        log.error(f"Failed to create security group: {e}")
+        return None
+
+
+def create_ec2_instance(
+    subnet_id,
+    security_group_id,
+    region="ca-central-1",
+    instance_type="t3.medium",
+    key_name="lab-keypair",
+    image_id="ami-0c55b159cbfafe1f0",
+    name="default-instance",
+    user_data=None,
+    volume_size=20,
+    min_count=1,
+    max_count=1,
+):
+    log.info(f"Creating EC2 instance: {name} ({instance_type}) - Count: {min_count}")
+
+    try:
+        ec2 = boto3.client("ec2", region_name=region)
+        response = ec2.run_instances(
+            ImageId=image_id,
+            MinCount=min_count,
+            MaxCount=max_count,
+            InstanceType=instance_type,
+            KeyName=key_name,
+            SubnetId=subnet_id,
+            SecurityGroupIds=[security_group_id],
+            UserData=user_data,
+            BlockDeviceMappings=[
+                {
+                    "DeviceName": "/dev/sda1",
+                    "Ebs": {"VolumeSize": volume_size, "VolumeType": "gp2", "DeleteOnTermination": True},
+                }
+            ],
+            TagSpecifications=[{"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": name}]}],
+        )
+
+        instance_ids = [inst["InstanceId"] for inst in response["Instances"]]
+
+        log.info(f"EC2 instance(s) created: {instance_ids}")
+        return instance_ids
+
+    except ClientError as e:
+        log.error(f"Failed to create EC2 instance: {e}")
+        return None
 
 
 def create_routing_Table():
@@ -57,8 +131,4 @@ def create_routing_Table():
 
 
 def create_internet_gateway():
-    pass
-
-
-def create_ec2_instance():
     pass
