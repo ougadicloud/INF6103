@@ -126,9 +126,59 @@ def create_ec2_instance(
         return None
 
 
-def create_routing_Table():
+def create_internet_gateway(vpc_id, region="ca-central-1", name="default-igw"):
+    log.info(f"Creating Internet Gateway: {name}")
+
+    try:
+        ec2 = boto3.client("ec2", region_name=region)
+        response = ec2.create_internet_gateway()
+        igw_id = response["InternetGateway"]["InternetGatewayId"]
+
+        ec2.attach_internet_gateway(InternetGatewayId=igw_id, VpcId=vpc_id)
+
+        ec2.create_tags(Resources=[igw_id], Tags=[{"Key": "Name", "Value": name}])
+
+        log.info(f"Internet Gateway created and attached: {igw_id}")
+        return igw_id
+
+    except ClientError as e:
+        log.error(f"Failed to create Internet Gateway: {e}")
+        return None
+
+
+def create_route_table(
+    vpc_id,
+    internet_gateway_id,
+    region="ca-central-1",
+    name="default-rt",
+):
+    log.info(f"Creating route table: {name}")
+
+    try:
+        ec2 = boto3.client("ec2", region_name=region)
+        response = ec2.create_route_table(VpcId=vpc_id)
+        route_table_id = response["RouteTable"]["RouteTableId"]
+
+        ec2.create_tags(Resources=[route_table_id], Tags=[{"Key": "Name", "Value": name}])
+
+        ec2.create_route(
+            RouteTableId=route_table_id,
+            DestinationCidrBlock="0.0.0.0/0",
+            GatewayId=internet_gateway_id,
+        )
+        log.info("Route to Internet Gateway added")
+
+        log.info(f"Route table created: {route_table_id}")
+        return route_table_id
+
+    except ClientError as e:
+        log.error(f"Failed to create route table: {e}")
+        return None
+
+
+def create_key_pair():
     pass
 
 
-def create_internet_gateway():
+def load_user_data():
     pass
