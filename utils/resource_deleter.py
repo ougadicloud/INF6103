@@ -76,12 +76,51 @@ def delete_internet_gateway(internet_gateway_id, vpc_id, region="ca-central-1"):
 
 
 def delete_subnet(subnet_id, region="ca-central-1"):
-    pass
+    log.info(f"Deleting subnet: {subnet_id}")
+
+    try:
+        ec2 = boto3.client("ec2", region_name=region)
+        ec2.delete_subnet(SubnetId=subnet_id)
+
+        log.info(f"Subnet deleted: {subnet_id}")
+        return True
+
+    except ClientError as e:
+        log.error(f"Failed to delete subnet: {e}")
+        return False
 
 
 def delete_vpc(vpc_id, region="ca-central-1"):
-    pass
+    log.info(f"Deleting VPC: {vpc_id}")
+
+    try:
+        ec2 = boto3.client("ec2", region_name=region)
+        ec2.delete_vpc(VpcId=vpc_id)
+
+        log.info(f"VPC deleted: {vpc_id}")
+        return True
+
+    except ClientError as e:
+        log.error(f"Failed to delete VPC: {e}")
+        return False
 
 
 def delete_key_pair(key_name, region="ca-central-1"):
-    pass
+    log.info(f"Deleting key pair: {key_name}")
+
+    try:
+        ec2 = boto3.client("ec2", region_name=region)
+        ec2.delete_key_pair(KeyName=key_name)
+
+        log.info(f"Key pair deleted from AWS: {key_name}")
+
+        pem_file = f"{key_name}.pem"
+        if os.path.exists(pem_file):
+            os.remove(pem_file)
+            log.info(f"Local key file deleted: {pem_file}")
+
+        return True
+
+    except ClientError as e:
+        log.error(f"Failed to delete key pair: {e}")
+        return False
