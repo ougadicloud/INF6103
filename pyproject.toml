@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "inf6103-labs"
+version = "0.1.0"
+description = "INF6103 Labs - Cybersecurity of Critical Cloud Infrastructure"
+requires-python = ">=3.8"
+dependencies = [
+    "boto3",
+    "black",
+    "ruff",
+]
+
+[tool.black]
+line-length = 120
+
+[tool.ruff]
+line-length = 120
