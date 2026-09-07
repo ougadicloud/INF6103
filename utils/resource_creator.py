@@ -1,3 +1,5 @@
+import os
+
 import boto3
 from botocore.exceptions import ClientError
 from logger import Logger
@@ -176,9 +178,40 @@ def create_route_table(
         return None
 
 
-def create_key_pair():
-    pass
+def create_key_pair(region="ca-central-1", key_name="lab-keypair"):
+    log.info(f"Creating key pair: {key_name}")
+
+    try:
+        ec2 = boto3.client("ec2", region_name=region)
+        response = ec2.create_key_pair(KeyName=key_name)
+
+        with open(f"{key_name}.pem", "w") as f:
+            f.write(response["KeyMaterial"])
+
+        os.chmod(f"{key_name}.pem", 0o600)
+
+        log.info(f"Key pair created and saved: {key_name}.pem")
+        return key_name
+
+    except ClientError as e:
+        log.error(f"Failed to create key pair: {e}")
+        return None
 
 
-def load_user_data():
-    pass
+def load_user_data(file_path="tp1/user_data.tpl"):
+    log.info(f"Loading user data from {file_path}")
+
+    try:
+        if not os.path.exists(file_path):
+            log.error(f"User data file not found: {file_path}")
+            return None
+
+        with open(file_path, "r") as f:
+            user_data = f.read()
+
+        log.info(f"User data loaded: {len(user_data)} bytes")
+        return user_data
+
+    except OSError as e:
+        log.error(f"Failed to load user data: {e}")
+        return None
