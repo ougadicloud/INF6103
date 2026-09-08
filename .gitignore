@@ -1,2 +1,7 @@
 .ruff_cache
 .venv
+__pycache__
+*.pem
+*.pyc
+.DS_Store
+infra.json

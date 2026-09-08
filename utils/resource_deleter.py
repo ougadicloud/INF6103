@@ -2,7 +2,8 @@ import os
 
 import boto3
 from botocore.exceptions import ClientError
-from logger import Logger
+
+from .logger import Logger
 
 log = Logger(__name__)
 

@@ -37,6 +37,12 @@ def lab1_create():
     if not rt_id:
         return False
 
+    association_id = resource_creator.associate_subnet_with_route_table(
+        subnet_id=subnet_id, route_table_id=rt_id, region="ca-central-1"
+    )
+    if not association_id:
+        return False
+
     ingress_rules = [
         {
             "IpProtocol": "tcp",
@@ -98,6 +104,7 @@ def lab1_create():
     log.info(f"Subnet ID: {subnet_id}")
     log.info(f"IGW ID: {igw_id}")
     log.info(f"Route Table ID: {rt_id}")
+    log.info(f"Association ID: {association_id}")
     log.info(f"Security Group ID: {sg_id}")
     log.info(f"Key Pair: {key_name}")
     log.info(f"Instance IDs: {instance_ids}")
